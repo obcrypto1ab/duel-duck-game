@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duel Duck | AI vs You</title>
+    <!-- 
+        Duel Duck AI vs You
+        A premium prediction battle.
+        Built as a single-file masterpiece.
+    -->
+    <style>
+        :root {
+            --bg-dark: #0a0a0c;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.07);
+            --primary: #ff9d00;
+            --primary-glow: rgba(255, 157, 0, 0.5);
+            --secondary: #ffcc00;
+            --accent: #ffeb3b;
+            --text-main: #ffffff;
+            --text-dim: #a0a0a0;
+            --success: #00ff88;
+            --danger: #ff4444;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(255, 157, 0, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 204, 0, 0.05) 0%, transparent 40%);
+        }
+
+        /* --- UTILITIES --- */
+        .glass {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- HEADER & LINKS --- */
+        header {
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .logo-container {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1.5rem;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .logo-container:hover { transform: scale(1.1) rotate(5deg); }
+
+        .duck-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .duck-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 2rem;
+            color: var(--bg-dark);
+            box-shadow: 0 0 30px var(--primary-glow);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 1rem;
+        }
+
+        .social-link {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.8rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            transition: 0.3s;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .social-link:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(255, 157, 0, 0.05);
+        }
+
+        /* --- HERO SECTION --- */
+        #hero-section {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 2rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+            background: linear-gradient(to right, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+
+        .main-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000;
+            border: none;
+            padding: 1.2rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(255, 157, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        .main-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 157, 0, 0.5);
+        }
+
+        .secondary-btn {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .secondary-btn:hover { background: var(--bg-card-hover); }
+
+        /* --- GAME ARENA --- */
+        #game-arena {
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card {
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .question-card {
+            padding: 3rem 2rem;
+            text-align: center;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #question-text {
+            font-size: 1.8rem;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 2rem;
+        }
+
+        .choice-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .choice-btn {
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 2px solid var(--glass-border);
+            background: rgba(255,255,255,0.02);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .choice-btn.yes:hover { border-color: var(--success); color: var(--success); background: rgba(0, 255, 136, 0.05); }
+        .choice-btn.no:hover { border-color: var(--danger); color: var(--danger); background: rgba(255, 68, 68, 0.05); }
+
+        .choice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* --- AI SECTION --- */
+        .ai-status-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 1rem 0;
+            height: 60px;
+        }
+
+        .ai-thinking-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: dot-pulse 1.5s infinite;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dot-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.5); opacity: 1; }
+        }
+
+        .ai-reasoning {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            font-style: italic;
+        }
+
+        /* --- RESULTS PANEL --- */
+        #result-panel {
+            text-align: center;
+            padding: 2rem;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .result-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .winner-tag {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .duel-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 1.5rem 0;
+        }
+
+        .summary-box {
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.03);
+        }
+
+        /* --- TENSION BAR --- */
+        .tension-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-top: 2rem;
+            overflow: hidden;
+        }
+
+        .tension-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            transition: width 0.1s linear;
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top:0; left:0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-content {
+            max-width: 500px;
+            width: 100%;
+            padding: 2.5rem;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px; right: 15px;
+            cursor: pointer;
+            color: var(--text-dim);
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.75rem;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .diff-btn {
+            padding: 5px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .diff-btn.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(255,157,0,0.1);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake { animation: shake 0.2s ease-in-out 0s 2; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2.2rem; }
+            #question-text { font-size: 1.4rem; }
+            .choice-container { grid-template-columns: 1fr; }
+        }
+
+        /* Sound Toggle */
+        .audio-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container" id="duck-logo-root">
+            <!-- JS will populate this -->
+            <div class="duck-placeholder">DD</div>
+        </div>
+        <h1 class="glow-text">Duel Duck</h1>
+        <p style="color: var(--primary); font-weight: bold; margin-bottom: 5px;">AI vs YOU</p>
+        <div class="social-links">
+            <a href="https://x.com/duel_duck" target="_blank" class="social-link">Project</a>
+            <a href="https://x.com/stan_duel_duck" target="_blank" class="social-link">CEO</a>
+            <a href="https://x.com/ai_elon_musk_" target="_blank" class="social-link">Dev</a>
+        </div>
+    </header>
+
+    <!-- START SCREEN -->
+    <section id="hero-section">
+        <p class="subtitle">A prediction battle between your conviction and AI logic. Can you outsmart the duck?</p>
+        <button class="main-btn" onclick="game.start()">Start Duel</button>
+        <button class="secondary-btn" onclick="ui.toggleModal(true)">How it works</button>
+        
+        <div class="difficulty-selector">
+            <button class="diff-btn active" onclick="game.setDifficulty('Casual', this)">Casual</button>
+            <button class="diff-btn" onclick="game.setDifficulty('Sharp', this)">Sharp</button>
+            <button class="diff-btn" onclick="game.setDifficulty('Chaos', this)">Chaos</button>
+        </div>
+    </section>
+
+    <!-- GAME ARENA -->
+    <section id="game-arena" class="hidden">
+        <div class="stats-bar">
+            <div class="stat-card glass">
+                <div class="stat-label">You</div>
+                <div id="player-score" class="stat-value">0</div>
+            </div>
+            <div class="stat-card glass">
+                <div class="stat-label">Round</div>
+                <div id="round-count" class="stat-value">1/10</div>
+            </div>
+            <div class="stat-card glass">
+                <div class="stat-label">Duck AI</div>
+                <div id="ai-score" class="stat-value">0</div>
+            </div>
+        </div>
+
+        <div class="question-card glass" id="q-card">
+            <p id="question-text">Will Bitcoin hit a new all time high this year?</p>
+            
+            <div class="choice-container" id="input-area">
+                <button class="choice-btn yes" onclick="game.makeChoice('YES')">YES</button>
+                <button class="choice-btn no" onclick="game.makeChoice('NO')">NO</button>
+            </div>
+
+            <div id="ai-thinking-area" class="hidden">
+                <div class="ai-status-container">
+                    <div class="ai-thinking-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <span style="font-size: 0.9rem; color: var(--primary);">AI is analyzing market sentiment...</span>
+                </div>
+                <div class="tension-container">
+                    <div class="tension-fill" id="tension-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROUND RESULT PANEL -->
+        <div id="result-panel" class="glass hidden">
+            <div id="result-outcome-text" class="result-title">YOU WON</div>
+            <div class="ai-reasoning" id="ai-reasoning-text">"I underestimated the retail momentum."</div>
+            
+            <div class="duel-summary">
+                <div class="summary-box">
+                    <div class="stat-label">Your Choice</div>
+                    <div id="player-choice-reveal" style="font-weight:bold;">YES</div>
+                </div>
+                <div class="summary-box">
+                    <div class="stat-label">AI Choice</div>
+                    <div id="ai-choice-reveal" style="font-weight:bold;">NO</div>
+                </div>
+            </div>
+
+            <button class="main-btn" id="next-btn" onclick="game.nextRound()">Next Round</button>
+        </div>
+    </section>
+
+    <!-- INSTRUCTIONS MODAL -->
+    <div id="modal" class="modal-overlay hidden">
+        <div class="modal-content glass">
+            <div class="close-btn" onclick="ui.toggleModal(false)">✕</div>
+            <h2 style="margin-bottom: 1rem; color: var(--primary);">The Duel Rules</h2>
+            <ul style="text-align: left; line-height: 1.8; color: var(--text-dim); margin-bottom: 1.5rem;">
+                <li>• You are presented with a market prediction.</li>
+                <li>• Choose <b>YES</b> or <b>NO</b> based on your conviction.</li>
+                <li>• The <b>Duck AI</b> will simultaneously analyze and pick a side.</li>
+                <li>• A simulated outcome is generated based on real-world probability.</li>
+                <li>• Win rounds to prove your alpha. Best of 10 wins.</li>
+            </ul>
+            <button class="secondary-btn" style="width:100%" onclick="ui.toggleModal(false)">Got it</button>
+        </div>
+    </div>
+
+    <!-- AUDIO TOGGLE -->
+    <div class="audio-toggle glass" onclick="audio.toggle()">
+        <span id="audio-icon">🔊</span>
+    </div>
+
+    <footer>
+        <p>Best Score: <span id="best-score">0</span> | <span style="cursor:pointer; text-decoration: underline;" onclick="game.resetBest()">Reset</span></p>
+        <p style="margin-top: 10px; opacity: 0.5;">Unofficial concept game inspired by Duel Duck</p>
+    </footer>
+
+    <script>
+        /**
+         * CONFIGURATION
+         */
+        const DUCK_LOGO = "duck-logo.png"; // Replace with your actual path
+
+        const QUESTIONS = [
+            "Will Bitcoin hit a new all-time high this year?",
+            "Will Solana outperform Ethereum this month?",
+            "Will AI agents dominate crypto discussions this quarter?",
+            "Will meme coins still trend next month?",
+            "Will this duel reach 100 participants today?",
+            "Will Bitcoin drop to $10,000 by 2050?",
+            "Will a prediction with 0% chance still attract users?",
+            "Will global crypto adoption double by 2026?",
+            "Will DAO governance replace traditional boards?",
+            "Will NFTs make a massive comeback in gaming this year?",
+            "Will gas fees on L2s drop below $0.001?",
+            "Will the next bull run be led by RWA (Real World Assets)?",
+            "Will decentralized social media flip X/Twitter?",
+            "Will Apple integrate a native crypto wallet in iOS?",
+            "Will AI-generated tokens reach a $10B market cap?",
+            "Will Bitcoin stay above $50k for the rest of the year?",
+            "Will Ethereum's 'The Purge' happen before 2025?",
+            "Will a major country adopt BTC as legal tender this year?",
+            "Will your conviction beat my algorithm today?",
+            "Will prediction markets become the primary news source?",
+            "Will AI ducks eventually rule the metaverse?",
+            "Will Solana ever flip Ethereum in market cap?",
+            "Will hardware wallets become obsolete by 2030?",
+            "Will regulation kill the privacy coin market?",
+            "Will we see a $100k Bitcoin in the next 12 months?"
+        ];
+
+        const AI_PHRASES = {
+            win: [
+                "I followed the data, you followed your heart.",
+                "Logic prevails over emotion once again.",
+                "My neural pathways detected that volatility.",
+                "Algorithmically superior choice.",
+                "I saw that coming 10 blocks away."
+            ],
+            lose: [
+                "I underestimated the human irrationality.",
+                "A statistical anomaly... interesting.",
+                "You found the alpha I missed.",
+                "My risk parameters were too conservative.",
+                "Luck? Or do you know something I don't?"
+            ],
+            tie: [
+                "We share the same hive mind.",
+                "A consensus has been reached.",
+                "Great minds (and ducks) think alike.",
+                "The data was too obvious for both of us."
+            ]
+        };
+
+        /**
+         * AUDIO ENGINE (Web Audio API)
+         */
+        const audio = {
+            enabled: true,
+            ctx: null,
+            init() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+            toggle() {
+                this.enabled = !this.enabled;
+                document.getElementById('audio-icon').innerText = this.enabled ? "🔊" : "🔇";
+            },
+            play(type) {
+                if (!this.enabled) return;
+                if (!this.ctx) this.init();
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                const now = this.ctx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                    osc.start();
+                    osc.stop(now + 0.1);
+                } else if (type === 'win') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start();
+                    osc.stop(now + 0.3);
+                } else if (type === 'lose') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.linearRampToValueAtTime(50, now + 0.4);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                    osc.start();
+                    osc.stop(now + 0.4);
+                } else if (type === 'thinking') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(150, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                    osc.start();
+                    osc.stop(now + 0.5);
+                }
+            }
+        };
+
+        /**
+         * GAME ENGINE
+         */
+        const game = {
+            playerScore: 0,
+            aiScore: 0,
+            currentRound: 0,
+            totalRounds: 10,
+            difficulty: 'Casual',
+            questions: [],
+            isGameOver: false,
+
+            start() {
+                audio.play('click');
+                this.playerScore = 0;
+                this.aiScore = 0;
+                this.currentRound = 1;
+                this.isGameOver = false;
+                this.questions = [...QUESTIONS].sort(() => Math.random() - 0.5);
+                
+                ui.showScreen('game-arena');
+                this.loadRound();
+            },
+
+            setDifficulty(level, el) {
+                audio.play('click');
+                this.difficulty = level;
+                document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            },
+
+            loadRound() {
+                if (this.currentRound > this.totalRounds) {
+                    this.endGame();
+                    return;
+                }
+
+                ui.updateStats();
+                const qText = this.questions[this.currentRound - 1];
+                document.getElementById('question-text').innerText = qText;
+                
+                ui.toggleInput(true);
+                ui.hideResult();
+            },
+
+            async makeChoice(playerChoice) {
+                audio.play('click');
+                ui.toggleInput(false);
+                ui.showThinking(true);
+
+                // Simulate AI Thinking
+                let progress = 0;
+                const bar = document.getElementById('tension-bar');
+                const thinkInterval = setInterval(() => {
+                    progress += 5;
+                    bar.style.width = progress + '%';
+                    if (progress % 20 === 0) audio.play('thinking');
+                    if (progress >= 100) clearInterval(thinkInterval);
+                }, 50);
+
+                await new Promise(r => setTimeout(r, 1500));
+
+                // Logic: Outcome Generation
+                // 50/50 base, but influenced slightly by difficulty randomness
+                const outcome = Math.random() > 0.5 ? 'YES' : 'NO';
+                
+                // Logic: AI Choice
+                // Casual: AI picks randomly
+                // Sharp: AI has 60% chance to pick correctly
+                // Chaos: AI picks opposite of player often
+                let aiChoice;
+                const chance = Math.random();
+                if (this.difficulty === 'Casual') {
+                    aiChoice = Math.random() > 0.5 ? 'YES' : 'NO';
+                } else if (this.difficulty === 'Sharp') {
+                    aiChoice = chance < 0.6 ? outcome : (outcome === 'YES' ? 'NO' : 'YES');
+                } else {
+                    aiChoice = Math.random() > 0.7 ? playerChoice : (playerChoice === 'YES' ? 'NO' : 'YES');
+                }
+
+                this.resolveRound(playerChoice, aiChoice, outcome);
+            },
+
+            resolveRound(p, a, o) {
+                ui.showThinking(false);
+                
+                const pWin = p === o;
+                const aWin = a === o;
+
+                if (pWin) this.playerScore++;
+                if (aWin) this.aiScore++;
+
+                let resultMsg = "";
+                let audioType = "win";
+                let reason = "";
+
+                if (pWin && !aWin) {
+                    resultMsg = "YOU WON THE ROUND";
+                    reason = AI_PHRASES.lose[Math.floor(Math.random() * AI_PHRASES.lose.length)];
+                } else if (!pWin && aWin) {
+                    resultMsg = "AI WON THE ROUND";
+                    audioType = "lose";
+                    reason = AI_PHRASES.win[Math.floor(Math.random() * AI_PHRASES.win.length)];
+                } else if (pWin && aWin) {
+                    resultMsg = "BOTH CORRECT";
+                    reason = AI_PHRASES.tie[Math.floor(Math.random() * AI_PHRASES.tie.length)];
+                } else {
+                    resultMsg = "BOTH WRONG";
+                    audioType = "lose";
+                    reason = "Market irrationality blinded us both.";
+                }
+
+                audio.play(audioType);
+                ui.showResult(resultMsg, p, a, reason, o);
+                ui.updateStats();
+            },
+
+            nextRound() {
+                audio.play('click');
+                this.currentRound++;
+                this.loadRound();
+            },
+
+            endGame() {
+                this.isGameOver = true;
+                let finalMsg = "DUEL OVER";
+                let sub = "";
+                
+                if (this.playerScore > this.aiScore) {
+                    finalMsg = "VICTORY";
+                    sub = "You outsmarted the Duck AI!";
+                } else if (this.aiScore > this.playerScore) {
+                    finalMsg = "DEFEAT";
+                    sub = "The Duck AI saw right through you.";
+                } else {
+                    finalMsg = "DRAW";
+                    sub = "A perfect equilibrium.";
+                }
+
+                // Update best score
+                const best = localStorage.getItem('duelDuckBest') || 0;
+                if (this.playerScore > best) {
+                    localStorage.setItem('duelDuckBest', this.playerScore);
+                }
+
+                document.getElementById('question-text').innerText = finalMsg;
+                document.getElementById('input-area').innerHTML = `
+                    <p style="grid-column: span 2; margin-bottom: 20px; color: var(--text-dim);">${sub}</p>
+                    <button class="main-btn" style="grid-column: span 2;" onclick="game.start()">Rematch</button>
+                    <button class="secondary-btn" style="grid-column: span 2;" onclick="location.reload()">Main Menu</button>
+                `;
+                ui.updateStats();
+            },
+
+            resetBest() {
+                localStorage.setItem('duelDuckBest', 0);
+                ui.updateStats();
+            }
+        };
+
+        /**
+         * UI CONTROLLER
+         */
+        const ui = {
+            showScreen(id) {
+                document.getElementById('hero-section').classList.add('hidden');
+                document.getElementById('game-arena').classList.remove('hidden');
+            },
+
+            updateStats() {
+                document.getElementById('player-score').innerText = game.playerScore;
+                document.getElementById('ai-score').innerText = game.aiScore;
+                document.getElementById('round-count').innerText = `${game.currentRound}/${game.totalRounds}`;
+                document.getElementById('best-score').innerText = localStorage.getItem('duelDuckBest') || 0;
+            },
+
+            toggleInput(show) {
+                const area = document.getElementById('input-area');
+                area.classList.toggle('hidden', !show);
+                // Reset buttons if it's the end of game layout
+                if (game.isGameOver) return;
+                area.innerHTML = `
+                    <button class="choice-btn yes" onclick="game.makeChoice('YES')">YES</button>
+                    <button class="choice-btn no" onclick="game.makeChoice('NO')">NO</button>
+                `;
+            },
+
+            showThinking(show) {
+                document.getElementById('ai-thinking-area').classList.toggle('hidden', !show);
+                if (show) document.getElementById('tension-bar').style.width = '0%';
+            },
+
+            showResult(msg, pChoice, aChoice, reason, actual) {
+                const panel = document.getElementById('result-panel');
+                panel.classList.remove('hidden');
+                
+                const title = document.getElementById('result-outcome-text');
+                title.innerText = msg;
+                title.style.color = msg.includes("YOU") ? "var(--success)" : (msg.includes("AI") ? "var(--danger)" : "var(--primary)");
+
+                document.getElementById('player-choice-reveal').innerText = pChoice;
+                document.getElementById('player-choice-reveal').style.color = pChoice === actual ? "var(--success)" : "var(--danger)";
+                
+                document.getElementById('ai-choice-reveal').innerText = aChoice;
+                document.getElementById('ai-choice-reveal').style.color = aChoice === actual ? "var(--success)" : "var(--danger)";
+                
+                document.getElementById('ai-reasoning-text').innerText = `"${reason}"`;
+
+                // Add "Outcome: YES/NO" badge
+                const qCard = document.getElementById('q-card');
+                const outcomeBadge = document.createElement('div');
+                outcomeBadge.className = 'winner-tag glow-text';
+                outcomeBadge.style.background = actual === 'YES' ? 'rgba(0,255,136,0.2)' : 'rgba(255,68,68,0.2)';
+                outcomeBadge.style.color = actual === 'YES' ? 'var(--success)' : 'var(--danger)';
+                outcomeBadge.innerText = `MARKET REVEAL: ${actual}`;
+                outcomeBadge.id = "temp-outcome";
+                qCard.appendChild(outcomeBadge);
+            },
+
+            hideResult() {
+                document.getElementById('result-panel').classList.add('hidden');
+                const temp = document.getElementById('temp-outcome');
+                if (temp) temp.remove();
+            },
+
+            toggleModal(show) {
+                audio.play('click');
+                document.getElementById('modal').classList.toggle('hidden', !show);
+            }
+        };
+
+        // Initialize Logo
+        window.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('duck-logo-root');
+            const img = new Image();
+            img.src = DUCK_LOGO;
+            img.onload = () => {
+                container.innerHTML = `<img src="${DUCK_LOGO}" class="duck-logo" alt="Duel Duck">`;
+            };
+            img.onerror = () => {
+                // Fallback already exists in HTML
+            };
+
+            // Keyboard Support
+            window.addEventListener('keydown', (e) => {
+                if (document.getElementById('game-arena').classList.contains('hidden')) return;
+                if (!document.getElementById('result-panel').classList.contains('hidden')) {
+                    if (e.key === 'Enter' || e.key === ' ') game.nextRound();
+                    return;
+                }
+                if (e.key.toLowerCase() === 'y') game.makeChoice('YES');
+                if (e.key.toLowerCase() === 'n') game.makeChoice('NO');
+            });
+        });
+    </script>
+
+    <!-- 
+        DEVELOPER INSTRUCTIONS:
+        1. CHANGE LOGO: Find the 'const DUCK_LOGO' variable in the script block (line 343) and update it to your filename.
+        2. SAVE: Save this code as 'index.html'.
+        3. UPLOAD: You can drag and drop this single file to GitHub, Vercel, or Netlify for instant deployment.
+        4. ASSETS: This game requires 0 external assets to function, but looks better with the duck-logo.png present.
+    -->
+</body>
+</html>
